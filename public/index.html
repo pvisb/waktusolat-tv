@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ms"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Papan Maklumat</title>
+<style>
+/* 1rem = 10 px of the 1364x634 reference design; everything scales to any screen */
+html{font-size:min(calc(100vw/136.4),calc(100vh/63.4))}
+:root{--navy:#0f1f3d;--blue:#2563c9;--mut:#9aa3b5}
+*{box-sizing:border-box;margin:0;padding:0}
+body{position:fixed;inset:0;overflow:hidden;background:#e6ecf8;font-family:Inter,"Segoe UI",Roboto,Arial,sans-serif;color:var(--navy)}
+svg.i{width:1em;height:1em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.12em}
+#app{position:absolute;inset:0;display:grid;grid-template-columns:280fr 724fr 300fr;grid-template-rows:5.9rem 1fr 3.4rem;gap:.8rem;padding:.8rem 1.4rem .4rem;background:#eef2fb}
+.card{background:#fff;border-radius:1.4rem;border:1px solid #dbe2f0;overflow:hidden;min-height:0}
+#head{grid-column:1/4;display:flex;align-items:center;justify-content:space-between;padding:0 3.4rem}
+#logo{display:flex;align-items:center;gap:1rem;width:30rem;font-weight:800;font-size:1.5rem}
+#logo img{height:4.8rem;width:auto}
+#clock{font-size:6.4rem;font-weight:800;letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums}
+#clock small{font-size:2.2rem;color:var(--mut);margin-left:.8rem;letter-spacing:0}
+#date{width:30rem;text-align:right;font-size:2.2rem;font-weight:700;line-height:1.25}
+#date div{color:var(--blue);font-size:1.8rem}
+#left,#mid,#right{display:flex;flex-direction:column;gap:.9rem;min-height:0}
+#prayers{flex:1;display:flex;flex-direction:column;padding:1.6rem 1.4rem 1rem}
+.ph{display:flex;align-items:center;gap:1.2rem;padding-bottom:1rem;border-bottom:1px solid #e2e7f1;margin-bottom:1rem;font-size:3rem;color:var(--blue)}
+.ph h2{font-size:2.2rem;color:var(--navy);line-height:1}.ph h3{font-size:1.1rem;letter-spacing:.03em}
+#plist{flex:1;display:flex;flex-direction:column;gap:.6rem;min-height:0}
+.pr{flex:1;max-height:5.4rem;display:flex;align-items:center;gap:1.1rem;padding:0 1.2rem;border-radius:1.2rem;background:#f4f6fb;font-size:2.2rem;font-weight:700}
+.pr .ib{width:3.4rem;height:3.4rem;border-radius:1rem;display:grid;place-items:center;font-size:1.9rem;color:#fff}
+.pr span{flex:1}.pr b{font-size:2.4rem}.pr small{font-size:1.1rem;margin-left:.2rem}
+.pr.past{opacity:.5}
+.pr.next{background:linear-gradient(90deg,#1d5fd6,#4f87e6);color:#fff;box-shadow:0 .6rem 1.6rem #2563c94d}
+#cd{height:14.3rem;padding:1rem 1.4rem;display:flex;flex-direction:column;align-items:center;font-size:1.3rem;color:#555}
+#cd .row{flex:1;display:flex;align-items:center;gap:1.6rem}
+#cd .ring{position:relative;width:7.8rem;height:7.8rem;color:var(--blue);font-size:3rem;display:grid;place-items:center}
+#cd .ring svg.r{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg);stroke-width:5}
+#cd .n{font-size:2.8rem;font-weight:800;color:var(--blue);line-height:1}
+#cd .t{font-size:3.6rem;font-weight:800;color:var(--navy);line-height:1.05;font-variant-numeric:tabular-nums}
+#cd .a{font-size:1.4rem;color:#333;font-weight:600}#cd small{font-size:1rem;color:var(--mut)}
+#slides{flex:1;position:relative;background:linear-gradient(135deg,#cfd8ea,#e6ecf8)}
+#slides .s{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity 1.2s}
+#slides .s.on{opacity:1}
+#dots{position:absolute;bottom:1rem;left:0;right:0;display:flex;justify-content:center;gap:.6rem}
+#dots i{width:.7rem;height:.7rem;border-radius:50%;background:#ffffff99}#dots i.on{background:var(--blue)}
+#slogan{height:6.5rem;display:flex;align-items:center;justify-content:center;white-space:nowrap;font-size:3.4rem;font-weight:800;font-style:italic;background:#e4ecfa;border-color:#cfdaf0}
+#slogan span{color:var(--blue);margin-left:.9rem}
+#wx{padding:0}
+.ch{display:flex;align-items:center;gap:.7rem;font-size:1.4rem;font-weight:800;letter-spacing:.06em;padding:.9rem 1.8rem;border-bottom:1px solid #e2e7f1}
+#wx .b{padding:1.2rem 1.8rem 1.4rem}
+#wx .tt{display:flex;align-items:center;gap:1.4rem}#wx .ic{width:5.2rem;height:5.2rem}
+#wx .tp{font-size:3.8rem;font-weight:800;line-height:1}#wx .ds{font-size:1.4rem;color:#667;margin-top:.3rem}
+#wx .xt{font-size:1.2rem;color:#556;margin-top:.8rem;line-height:1.7}#wx .xt svg{color:var(--blue);margin-right:.5rem}
+#ann{flex:1;position:relative}
+#ann .ch{background:#fdeceb;color:#c0392b;border-color:#f6d6d3}
+#annb{padding:1.3rem 1.8rem;font-size:1.25rem;line-height:1.5;color:#444}
+#annb p{margin-bottom:1rem;padding-left:.9rem;border-left:.4rem solid #c0392b}
+#snd{position:absolute;right:1rem;bottom:1rem;border:1px solid #dbe2f0;background:#fff;border-radius:2rem;padding:.6rem 1.2rem;font:700 1.1rem inherit;font-family:inherit;color:#333;cursor:pointer;display:flex;gap:.5rem;align-items:center}
+#tick{grid-column:1/4;display:flex;align-items:stretch;border-radius:1.2rem}
+#tick .lb{background:#e11d2e;color:#fff;font-weight:800;font-size:1.7rem;letter-spacing:.03em;padding:0 3.2rem 0 1.8rem;display:flex;align-items:center;white-space:nowrap;clip-path:polygon(0 0,100% 0,88% 100%,0 100%);position:relative;z-index:2}
+#tick .wrap{flex:1;overflow:hidden;white-space:nowrap;display:flex;align-items:center}
+#tick .run{display:inline-block;padding-left:100%;font-size:2rem;font-weight:700;animation:mq 60s linear infinite}
+#tick .run i{margin:0 2.2rem;color:var(--blue);font-style:normal}
+@keyframes mq{to{transform:translateX(-100%)}}
+</style></head><body>
+<div id="app">
+ <div id="head" class="card">
+  <div id="logo"><img src="logo.png" alt="Perda Ventures" onerror="this.remove();document.getElementById('co').hidden=false"><span id="co" hidden></span></div>
+  <div id="clock">--:--:--<small></small></div>
+  <div id="date">...<div></div></div>
+ </div>
+ <div id="left">
+  <div id="prayers" class="card"><div class="ph"><i data-ic="mosque"></i><div><h2>WAKTU SOLAT</h2><h3 id="place"></h3></div></div><div id="plist"></div></div>
+  <div id="cd" class="card"><span>Waktu seterusnya</span>
+   <div class="row"><div class="ring"><svg class="r i" viewBox="0 0 80 80"><circle cx="40" cy="40" r="36" stroke="#dfe7f7"/><circle id="arc" cx="40" cy="40" r="36" stroke="#2563c9" stroke-dasharray="226" stroke-dashoffset="0" stroke-linecap="round"/></svg><i data-ic="clock"></i></div>
+   <div><div class="n">--</div><div class="t">--:--:--</div><div class="a"></div></div></div>
+   <small>Sumber: e-Solat JAKIM</small></div>
+ </div>
+ <div id="mid"><div id="slides" class="card"><div id="dots"></div></div><div id="slogan" class="card"></div></div>
+ <div id="right">
+  <div id="wx" class="card"><div class="ch"><i data-ic="cloud"></i>CUACA SEMASA</div>
+   <div class="b"><div class="tt"><div class="ic"></div><div><div class="tp">--°C</div><div class="ds">--</div></div></div>
+   <div class="xt"></div></div></div>
+  <div id="ann" class="card"><div class="ch"><i data-ic="mega"></i>PENGUMUMAN</div><div id="annb"></div>
+   <button id="snd"></button></div>
+ </div>
+ <div id="tick" class="card"><div class="lb">INFO SEMASA</div><div class="wrap"><div class="run"></div></div></div>
+</div>
+<script>
+/* ===== EDIT THIS SECTION (or use admin.html) ===== */
+const CONFIG = {
+  company: "PERDA VENTURES INCORPORATED SDN BHD",
+  place: "Tasek Gelugor",
+  lat: 5.4667, lon: 100.4833, zone: "PNG01",
+  slogan: ["Komited Merealisasikan", "Impian Anda"],
+  images: ["img/1.jpg", "img/2.jpg", "img/3.jpg"],
+  slideSeconds: 8,
+  announcements: [],
+  ticker: ["PERDA VENTURES INCORPORATED SDN BHD", "Facebook: Perda Ventures Incorporated", "TikTok / Instagram: Perdaventures", "Tel: 04-XXXXXXX"],
+  hijriOffset: 0
+};
+/* ================================================= */
+const TZ="Asia/Kuala_Lumpur",$=s=>document.querySelector(s);
+const NAMES=["SUBUH","SYURUK","ZOHOR","ASAR","MAGHRIB","ISYAK"];
+const COL=["#a99cf5","#f6b85c","#f6b85c","#1fa856","#f97316","#8b5cf6"];
+const HM=["Muharram","Safar","Rabiulawal","Rabiulakhir","Jamadilawal","Jamadilakhir","Rejab","Syaaban","Ramadan","Syawal","Zulkaedah","Zulhijjah"];
+const P={sunrise:'<path d="M3 18h18M7 18a5 5 0 0110 0M12 6v3M4.5 11l1.5 1.5M19.5 11L18 12.5"/>',sun:'<circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6L7 7M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4"/>',
+sunset:'<path d="M3 19h18M7 19a5 5 0 0110 0M12 5v5M9.5 8L12 10.5 14.5 8"/>',moon:'<path d="M20 14.5A8 8 0 119.5 4a6.5 6.5 0 0010.5 10.5z"/>',
+mosque:'<path d="M12 2c-.8 2.4-4 3-4 7h8c0-4-3.2-4.6-4-7zM5 21V11M19 21V11M4 21h16M10 21v-3.5a2 2 0 014 0V21"/>',
+clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',cloud:'<path d="M7 18a4 4 0 010-8 5 5 0 019.5 1A3.5 3.5 0 0117 18z"/>',
+drop:'<path d="M12 3s6 6 6 10a6 6 0 01-12 0c0-4 6-10 6-10z"/>',wind:'<path d="M3 8h11a3 3 0 10-3-3M3 12h15a3 3 0 11-3 3M3 16h7"/>',
+pin:'<path d="M12 21s7-6 7-11a7 7 0 10-14 0c0 5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/>',mega:'<path d="M4 10v4h3l7 4V6l-7 4zM18 9a4 4 0 010 6"/>',
+mute:'<path d="M4 10v4h3l5 4V6L7 10zM16 9l5 6M21 9l-5 6"/>',vol:'<path d="M4 10v4h3l5 4V6L7 10zM16 9a4 4 0 010 6"/>'};
+const ic=(n)=>`<svg class="i" viewBox="0 0 24 24">${P[n]}</svg>`;
+document.querySelectorAll("[data-ic]").forEach(e=>e.outerHTML=ic(e.dataset.ic));
+const PI=["sunrise","sun","sun","mosque","sunset","moon"];
+let times=null,si=0,snd=localStorage.getItem("snd")==="1";
+
+function fit(){} // layout is fluid (rem based), nothing to do
+const ymd=(d=new Date())=>new Intl.DateTimeFormat("en-CA",{timeZone:TZ}).format(d);
+const to12=d=>d.toLocaleTimeString("en-US",{timeZone:TZ,hour:"numeric",minute:"2-digit"}).split(" ");
+const at=(y,hm)=>new Date(`${y}T${hm.slice(0,5).padStart(5,"0")}:00+08:00`);
+const setH=(el,h)=>{if(el.innerHTML!==h)el.innerHTML=h};
+
+function applyConfig(){
+  $("#co").textContent=CONFIG.company;$("#place").textContent=CONFIG.place.toUpperCase();
+  setH($("#slogan"),CONFIG.slogan[0]+"<span>"+CONFIG.slogan[1]+"</span>");
+  setH($("#annb"),CONFIG.announcements.length?CONFIG.announcements.map(a=>`<p>${a}</p>`).join(""):"Tiada pengumuman buat masa ini.");
+  setH($(".run"),[...CONFIG.ticker,...CONFIG.ticker].join("<i>|</i>"));
+  const box=$("#slides"),k=CONFIG.images.join("|");
+  if(box.dataset.k!==k){box.dataset.k=k;box.querySelectorAll(".s").forEach(e=>e.remove());si=0;
+    CONFIG.images.forEach((u,i)=>{const d=document.createElement("div");d.className="s"+(i?"":" on");d.style.backgroundImage=`url("${u}")`;box.insertBefore(d,$("#dots"))});
+    $("#dots").innerHTML=CONFIG.images.map((_,i)=>`<i class="${i?"":"on"}"></i>`).join("")}
+}
+setInterval(()=>{const a=document.querySelectorAll("#slides .s"),d=document.querySelectorAll("#dots i");if(a.length<2)return;
+  a[si].classList.remove("on");d[si].classList.remove("on");si=(si+1)%a.length;a[si].classList.add("on");d[si].classList.add("on")},CONFIG.slideSeconds*1000);
+async function loadConfig(){
+  try{const r=await fetch("/api/config",{cache:"no-store"});if(!r.ok)throw 0;const c=await r.json();Object.assign(CONFIG,c);localStorage.setItem("cfg",JSON.stringify(c))}
+  catch(e){try{Object.assign(CONFIG,JSON.parse(localStorage.getItem("cfg")||"{}"))}catch(_){}}
+  applyConfig();loadWeather();
+}
+
+/* sound button (put an azan.mp3 file next to index.html) */
+function drawSnd(){$("#snd").innerHTML=ic(snd?"vol":"mute")+" Bunyi: "+(snd?"ON":"OFF")}
+$("#snd").onclick=()=>{snd=!snd;localStorage.setItem("snd",snd?"1":"0");drawSnd();if(snd)new Audio("azan.mp3").play().catch(()=>{})};drawSnd();
+let played="";
+
+function tickClock(){
+  const n=new Date(),p=n.toLocaleTimeString("en-US",{timeZone:TZ,hour:"numeric",minute:"2-digit",second:"2-digit"}).split(" ");
+  $("#clock").firstChild.textContent=p[0];$("#clock small").textContent=p[1];
+  $("#date").firstChild.textContent=n.toLocaleDateString("ms-MY",{timeZone:TZ,weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  const h=new Date(n.getTime()+CONFIG.hijriOffset*864e5),q=new Intl.DateTimeFormat("en-u-ca-islamic-umalqura-nu-latn",{timeZone:TZ,day:"numeric",month:"numeric",year:"numeric"}).formatToParts(h),g=t=>+q.find(x=>x.type===t).value;
+  $("#date div").textContent=`${g("day")} ${HM[g("month")-1]} ${g("year")}H`;
+  countdown();
+}
+async function loadPrayer(){
+  const today=ymd(),c=JSON.parse(localStorage.getItem("pt")||"null");
+  if(c&&c.date===today){times=c.t;return render()}
+  let t=null;
+  try{const r=await(await fetch(`https://www.e-solat.gov.my/index.php?r=esolatApi/TakwimSolat&period=today&zone=${CONFIG.zone}`)).json(),p=r.prayerTime[0];t=[p.fajr,p.syuruk,p.dhuhr,p.asr,p.maghrib,p.isha].map(x=>x.slice(0,5))}
+  catch(e){try{const r=await(await fetch(`https://api.aladhan.com/v1/timings?latitude=${CONFIG.lat}&longitude=${CONFIG.lon}&method=17&timezonestring=${TZ}`)).json(),p=r.data.timings;t=[p.Fajr,p.Sunrise,p.Dhuhr,p.Asr,p.Maghrib,p.Isha].map(x=>x.slice(0,5))}catch(e2){if(c)t=c.t}}
+  if(t){times=t;localStorage.setItem("pt",JSON.stringify({date:today,t}));render()}
+}
+function nextIdx(){if(!times)return -1;const now=Date.now(),d=ymd();for(let i=0;i<6;i++)if(at(d,times[i]).getTime()>now)return i;return 0}
+function render(){
+  const ni=nextIdx(),d=ymd(),after=at(d,times[5])<=Date.now();
+  $("#plist").innerHTML=NAMES.map((n,i)=>{const p=to12(at(d,times[i])),past=after?i<6:i<ni;
+    return `<div class="pr${i===ni&&!after?" next":""}${past?" past":""}"><div class="ib" style="background:${i===ni&&!after?COL[i]:COL[i]}">${ic(PI[i])}</div><span>${n}</span><b>${p[0]}<small>${p[1]}</small></b></div>`}).join("");
+}
+let last=-2;
+function countdown(){
+  if(!times)return;const ni=nextIdx();if(ni!==last){last=ni;render()}
+  const d=ymd();let target=at(d,times[ni]);if(target<=Date.now())target=new Date(target.getTime()+864e5);
+  let prev=ni>0?at(d,times[ni-1]):new Date(at(d,times[5]).getTime()-864e5);if(ni===0&&Date.now()>at(d,times[5]))prev=at(d,times[5]);
+  const s=Math.max(0,Math.floor((target-Date.now())/1000)),f=v=>String(v).padStart(2,"0"),pr=Math.min(1,Math.max(0,(Date.now()-prev)/(target-prev)));
+  $("#cd .n").textContent=NAMES[ni];$("#cd .t").textContent=`${f(s/3600|0)}:${f(s%3600/60|0)}:${f(s%60)}`;
+  const p=to12(target);$("#cd .a").textContent=`( ${p[0]} ${p[1]} )`;$("#arc").style.strokeDashoffset=226*(1-pr);
+  if(snd&&s===0&&ni!==1&&played!==d+ni){played=d+ni;new Audio("azan.mp3").play().catch(()=>{})}
+}
+const WI=(c)=>{const cl='<path d="M14 52a13 13 0 010-26 16 16 0 0130-3 12 12 0 012 29z" fill="#a8b0c2" stroke="none"/>',
+  dr=[22,34,46].map(x=>`<path d="M${x} 56l-3 8" stroke="#4a63e8" stroke-width="5"/>`).join("");
+  return c===0?'<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="14" fill="#fbbf24" stroke="none"/></svg>':
+  `<svg viewBox="0 0 64 72" style="stroke-linecap:round">${cl}${c>=51&&c!==45&&c!==48?dr:""}</svg>`};
+const WT=c=>c===0?"Cerah":c<=3?"Berawan":c<=48?"Berkabus":c<=57?"Renyai-renyai":c<=67?"Hujan":c<=82?"Hujan lebat":"Ribut petir";
+async function loadWeather(){
+  try{const r=await(await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${CONFIG.lat}&longitude=${CONFIG.lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&timezone=${TZ}`)).json(),c=r.current;
+    $("#wx .ic").innerHTML=WI(c.weather_code);$("#wx .tp").textContent=Math.round(c.temperature_2m)+"°C";$("#wx .ds").textContent=WT(c.weather_code);
+    $("#wx .xt").innerHTML=`${ic("drop")} Kelembapan: ${c.relative_humidity_2m}%<br>${ic("wind")} Angin: ${Math.round(c.wind_speed_10m)} km/j<br>${ic("pin")} ${CONFIG.place}`}catch(e){}
+}
+tickClock();setInterval(tickClock,1000);
+loadConfig();setInterval(loadConfig,5*60*1000);
+loadPrayer();setInterval(loadPrayer,30*60*1000);setInterval(loadWeather,15*60*1000);
+setTimeout(()=>location.reload(),6*3600*1000);
+</script></body></html>
