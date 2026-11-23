@@ -58,6 +58,25 @@ svg.i{width:1em;height:1em;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 #tick .run{display:inline-block;padding-left:100%;font-size:2rem;font-weight:700;animation:mq 60s linear infinite}
 #tick .run i{margin:0 2.2rem;color:var(--blue);font-style:normal}
 @keyframes mq{to{transform:translateX(-100%)}}
+
+/* ===== dark mode (set from admin.html) ===== */
+body,.card,#slogan,.pr,#snd{transition:background .5s,color .5s,border-color .5s}
+[data-theme=dark]{--navy:#e8eefc;--blue:#5b95f0;--mut:#7f8aa3}
+[data-theme=dark] body{background:#0b1220}
+[data-theme=dark] #app{background:#0b1220}
+[data-theme=dark] .card{background:#141d30;border-color:#25314a}
+[data-theme=dark] .ph,[data-theme=dark] .ch{border-color:#25314a}
+[data-theme=dark] .pr{background:#1b2640}
+[data-theme=dark] .pr.next{background:linear-gradient(90deg,#1d5fd6,#4f87e6)}
+[data-theme=dark] #cd{color:#9aa7c0}[data-theme=dark] #cd .a{color:#e8eefc}
+[data-theme=dark] .ring circle:first-child{stroke:#25314a}
+[data-theme=dark] #slides{background:linear-gradient(135deg,#1b2640,#141d30)}
+[data-theme=dark] #slogan{background:#17233d;border-color:#25314a}
+[data-theme=dark] #wx .ds{color:#9aa7c0}[data-theme=dark] #wx .xt{color:#aab6cf}
+[data-theme=dark] #ann .ch{background:#3a1a1d;color:#ff8a80;border-color:#4a2327}
+[data-theme=dark] #annb{color:#cbd5ea}
+[data-theme=dark] #snd{background:#1b2640;color:#e8eefc;border-color:#25314a}
+[data-theme=dark] #logo img{background:#fff;border-radius:.9rem;padding:.3rem .8rem}
 </style></head><body>
 <div id="app">
  <div id="head" class="card">
@@ -89,10 +108,11 @@ const CONFIG = {
   place: "Tasek Gelugor",
   lat: 5.4667, lon: 100.4833, zone: "PNG01",
   slogan: ["Komited Merealisasikan", "Impian Anda"],
-  images: ["img/1.jpg", "img/2.jpg", "img/3.jpg"],
+  images: ["img/1.jpg"],
   slideSeconds: 8,
+  theme: "light",            // "light", "dark" or "auto" (dark 7pm-7am)
   announcements: [],
-  ticker: ["PERDA VENTURES INCORPORATED SDN BHD", "Facebook: Perda Ventures Incorporated", "TikTok / Instagram: Perdaventures"],
+  ticker: ["PERDA VENTURES INCORPORATED SDN BHD", "Facebook: Perda Ventures Incorporated", "TikTok / Instagram: Perdaventures", "Tel: 04-XXXXXXX"],
   hijriOffset: 0
 };
 /* ================================================= */
@@ -118,7 +138,12 @@ const to12=d=>d.toLocaleTimeString("en-US",{timeZone:TZ,hour:"numeric",minute:"2
 const at=(y,hm)=>new Date(`${y}T${hm.slice(0,5).padStart(5,"0")}:00+08:00`);
 const setH=(el,h)=>{if(el.innerHTML!==h)el.innerHTML=h};
 
-function applyConfig(){
+function applyTheme(){
+  let t=CONFIG.theme;
+  if(t==="auto"){const h=+new Date().toLocaleString("en-GB",{timeZone:TZ,hour:"2-digit",hour12:false})%24;t=(h>=19||h<7)?"dark":"light"}
+  const v=t==="dark"?"dark":"light";if(document.documentElement.dataset.theme!==v)document.documentElement.dataset.theme=v;
+}
+function applyConfig(){applyTheme();
   $("#co").textContent=CONFIG.company;$("#place").textContent=CONFIG.place.toUpperCase();
   setH($("#slogan"),CONFIG.slogan[0]+"<span>"+CONFIG.slogan[1]+"</span>");
   setH($("#annb"),CONFIG.announcements.length?CONFIG.announcements.map(a=>`<p>${a}</p>`).join(""):"Tiada pengumuman buat masa ini.");
@@ -142,6 +167,7 @@ $("#snd").onclick=()=>{snd=!snd;localStorage.setItem("snd",snd?"1":"0");drawSnd(
 let played="";
 
 function tickClock(){
+  applyTheme();
   const n=new Date(),p=n.toLocaleTimeString("en-US",{timeZone:TZ,hour:"numeric",minute:"2-digit",second:"2-digit"}).split(" ");
   $("#clock").firstChild.textContent=p[0];$("#clock small").textContent=p[1];
   $("#date").firstChild.textContent=n.toLocaleDateString("ms-MY",{timeZone:TZ,weekday:"long",day:"numeric",month:"long",year:"numeric"});
