@@ -18,6 +18,7 @@ export default {
         slogan: [String(b.slogan?.[0] || "").slice(0, 80), String(b.slogan?.[1] || "").slice(0, 80)],
         announcements: (b.announcements || []).map(x => String(x).slice(0, 300)).slice(0, 10),
         ticker: (b.ticker || []).map(x => String(x).slice(0, 200)).slice(0, 20),
+        theme: ["light", "dark", "auto"].includes(b.theme) ? b.theme : "light",
         images: (b.images || []).map(x => String(x).slice(0, 300)).slice(0, 20),
       };
       await env.TV_KV.put("config", JSON.stringify(clean));
