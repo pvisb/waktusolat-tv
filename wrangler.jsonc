@@ -8,6 +8,6 @@
     "run_worker_first": ["/api/*"]
   },
   "kv_namespaces": [
-{ "binding": "TV_KV", "id": "54bc0642213f48009acafea5bb507945" }
+    { "binding": "TV_KV", "id": "54bc0642213f48009acafea5bb507945" }
   ]
 }
