@@ -41,6 +41,10 @@ footer{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:
   <div class="themes" id="th"><button class="opt" data-t="light" onclick="setTheme('light')"><span>☀️</span>Cerah<small>Latar putih</small></button>
   <button class="opt" data-t="dark" onclick="setTheme('dark')"><span>🌙</span>Gelap<small>Latar gelap</small></button>
   <button class="opt" data-t="auto" onclick="setTheme('auto')"><span>🌗</span>Auto<small>Gelap 7 mlm - 7 pagi</small></button></div></section>
+ <section class="card"><h2>📍 Lokasi</h2><p>Menentukan cuaca dan waktu solat. Untuk koordinat: klik kanan lokasi di Google Maps dan salin dua nombor itu. Kod zon JAKIM ada di e-solat.gov.my (Pulau Pinang: PNG01 hingga PNG04).</p>
+  <input id="pl" placeholder="Nama tempat, cth: Tasek Gelugor" style="margin-bottom:8px">
+  <div class="two"><input id="la" placeholder="Latitud, cth: 5.4667" inputmode="decimal"><input id="lo" placeholder="Longitud, cth: 100.4833" inputmode="decimal"></div>
+  <input id="zn" placeholder="Zon JAKIM, cth: PNG01" style="margin-top:8px"></section>
  <section class="card"><h2>🔒 Kata laluan</h2><p>Diperlukan untuk menyimpan perubahan.</p><input id="pw" type="password" placeholder="Kata laluan admin" autocomplete="current-password"></section>
  <section class="card"><h2>✨ Slogan</h2><p>Baris kedua dipaparkan dengan warna biru.</p>
   <div class="two"><input id="s1" placeholder="Baris 1"><input id="s2" placeholder="Baris 2 (biru)"></div>
@@ -69,14 +73,14 @@ function pv(){$("#pv").innerHTML=($("#s1").value||"")+" <span>"+($("#s2").value|
 $("#s1").oninput=$("#s2").oninput=pv;
 $("#pw").value=sessionStorage.getItem("pw")||"";
 fetch("/api/config",{cache:"no-store"}).then(r=>r.json()).catch(()=>({})).then(c=>{
- setTheme(c.theme||"light");$("#s1").value=c.slogan?.[0]||"Komited Merealisasikan";$("#s2").value=c.slogan?.[1]||"Impian Anda";
+ setTheme(c.theme||"light");$("#pl").value=c.place||"Tasek Gelugor";$("#la").value=c.lat??5.4667;$("#lo").value=c.lon??100.4833;$("#zn").value=c.zone||"PNG01";$("#s1").value=c.slogan?.[0]||"Komited Merealisasikan";$("#s2").value=c.slogan?.[1]||"Impian Anda";
  if(c.announcements)D.an=c.announcements;if(c.ticker?.length)D.tk=c.ticker;if(c.images?.length)D.im=c.images;
  ["an","tk","im"].forEach(draw);pv()});
 function say(t,ok){const m=$("#msg");m.textContent=t;m.className=ok?"ok":"er"}
 async function save(){
  const L=a=>a.map(x=>x.trim()).filter(Boolean),b=$("#save");b.disabled=true;say("Menyimpan...",true);
  try{const r=await fetch("/api/config",{method:"PUT",headers:{"x-admin-password":$("#pw").value,"content-type":"application/json"},
-  body:JSON.stringify({slogan:[$("#s1").value.trim(),$("#s2").value.trim()],theme,announcements:L(D.an),ticker:L(D.tk),images:L(D.im)})});
+  body:JSON.stringify({slogan:[$("#s1").value.trim(),$("#s2").value.trim()],theme,place:$("#pl").value.trim(),lat:+$("#la").value,lon:+$("#lo").value,zone:$("#zn").value.trim().toUpperCase(),announcements:L(D.an),ticker:L(D.tk),images:L(D.im)})});
   const j=await r.json().catch(()=>({}));
   if(r.ok){sessionStorage.setItem("pw",$("#pw").value);say("✅ Disimpan. TV akan dikemas kini dalam 5 minit.",true)}
   else say("❌ "+(j.error||"Gagal menyimpan"),false)}
