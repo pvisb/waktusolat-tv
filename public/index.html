@@ -130,7 +130,7 @@ mute:'<path d="M4 10v4h3l5 4V6L7 10zM16 9l5 6M21 9l-5 6"/>',vol:'<path d="M4 10v
 const ic=(n)=>`<svg class="i" viewBox="0 0 24 24">${P[n]}</svg>`;
 document.querySelectorAll("[data-ic]").forEach(e=>e.outerHTML=ic(e.dataset.ic));
 const PI=["sunrise","sun","sun","mosque","sunset","moon"];
-let times=null,si=0,snd=localStorage.getItem("snd")==="1";
+let curLoc="",times=null,si=0,snd=localStorage.getItem("snd")==="1";
 
 function fit(){} // layout is fluid (rem based), nothing to do
 const ymd=(d=new Date())=>new Intl.DateTimeFormat("en-CA",{timeZone:TZ}).format(d);
@@ -144,6 +144,7 @@ function applyTheme(){
   const v=t==="dark"?"dark":"light";if(document.documentElement.dataset.theme!==v)document.documentElement.dataset.theme=v;
 }
 function applyConfig(){applyTheme();
+  const lk=CONFIG.zone+"|"+CONFIG.lat+"|"+CONFIG.lon;if(lk!==curLoc){curLoc=lk;loadPrayer();loadWeather()}
   $("#co").textContent=CONFIG.company;$("#place").textContent=CONFIG.place.toUpperCase();
   setH($("#slogan"),CONFIG.slogan[0]+"<span>"+CONFIG.slogan[1]+"</span>");
   setH($("#annb"),CONFIG.announcements.length?CONFIG.announcements.map(a=>`<p>${a}</p>`).join(""):"Tiada pengumuman buat masa ini.");
@@ -158,7 +159,7 @@ setInterval(()=>{const a=document.querySelectorAll("#slides .s"),d=document.quer
 async function loadConfig(){
   try{const r=await fetch("/api/config",{cache:"no-store"});if(!r.ok)throw 0;const c=await r.json();Object.assign(CONFIG,c);localStorage.setItem("cfg",JSON.stringify(c))}
   catch(e){try{Object.assign(CONFIG,JSON.parse(localStorage.getItem("cfg")||"{}"))}catch(_){}}
-  applyConfig();loadWeather();
+  applyConfig();
 }
 
 /* sound button (put an azan.mp3 file next to index.html) */
@@ -176,12 +177,12 @@ function tickClock(){
   countdown();
 }
 async function loadPrayer(){
-  const today=ymd(),c=JSON.parse(localStorage.getItem("pt")||"null");
-  if(c&&c.date===today){times=c.t;return render()}
+  const today=ymd(),k=CONFIG.zone+"|"+CONFIG.lat+"|"+CONFIG.lon,c=JSON.parse(localStorage.getItem("pt")||"null");
+  if(c&&c.date===today&&c.k===k){times=c.t;return render()}
   let t=null;
   try{const r=await(await fetch(`https://www.e-solat.gov.my/index.php?r=esolatApi/TakwimSolat&period=today&zone=${CONFIG.zone}`)).json(),p=r.prayerTime[0];t=[p.fajr,p.syuruk,p.dhuhr,p.asr,p.maghrib,p.isha].map(x=>x.slice(0,5))}
-  catch(e){try{const r=await(await fetch(`https://api.aladhan.com/v1/timings?latitude=${CONFIG.lat}&longitude=${CONFIG.lon}&method=17&timezonestring=${TZ}`)).json(),p=r.data.timings;t=[p.Fajr,p.Sunrise,p.Dhuhr,p.Asr,p.Maghrib,p.Isha].map(x=>x.slice(0,5))}catch(e2){if(c)t=c.t}}
-  if(t){times=t;localStorage.setItem("pt",JSON.stringify({date:today,t}));render()}
+  catch(e){try{const r=await(await fetch(`https://api.aladhan.com/v1/timings?latitude=${CONFIG.lat}&longitude=${CONFIG.lon}&method=17&timezonestring=${TZ}`)).json(),p=r.data.timings;t=[p.Fajr,p.Sunrise,p.Dhuhr,p.Asr,p.Maghrib,p.Isha].map(x=>x.slice(0,5))}catch(e2){if(c&&c.k===k)t=c.t}}
+  if(t){times=t;localStorage.setItem("pt",JSON.stringify({date:today,k,t}));render()}
 }
 function nextIdx(){if(!times)return -1;const now=Date.now(),d=ymd();for(let i=0;i<6;i++)if(at(d,times[i]).getTime()>now)return i;return 0}
 function render(){
@@ -199,18 +200,24 @@ function countdown(){
   const p=to12(target);$("#cd .a").textContent=`( ${p[0]} ${p[1]} )`;$("#arc").style.strokeDashoffset=226*(1-pr);
   if(snd&&s===0&&ni!==1&&played!==d+ni){played=d+ni;new Audio("azan.mp3").play().catch(()=>{})}
 }
-const WI=(c)=>{const cl='<path d="M14 52a13 13 0 010-26 16 16 0 0130-3 12 12 0 012 29z" fill="#a8b0c2" stroke="none"/>',
+const WI=(k)=>{const cl='<path d="M14 52a13 13 0 010-26 16 16 0 0130-3 12 12 0 012 29z" fill="#a8b0c2" stroke="none"/>',
   dr=[22,34,46].map(x=>`<path d="M${x} 56l-3 8" stroke="#4a63e8" stroke-width="5"/>`).join("");
-  return c===0?'<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="14" fill="#fbbf24" stroke="none"/></svg>':
-  `<svg viewBox="0 0 64 72" style="stroke-linecap:round">${cl}${c>=51&&c!==45&&c!==48?dr:""}</svg>`};
-const WT=c=>c===0?"Cerah":c<=3?"Berawan":c<=48?"Berkabus":c<=57?"Renyai-renyai":c<=67?"Hujan":c<=82?"Hujan lebat":"Ribut petir";
+  return k==="sun"?'<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="14" fill="#fbbf24" stroke="none"/></svg>':
+  `<svg viewBox="0 0 64 72" style="stroke-linecap:round">${cl}${k==="rain"?dr:""}</svg>`};
+/* description follows measured rain + cloud cover (not only the forecast code) */
+function wxDesc(c){const p=c.precipitation||0,cc=c.cloud_cover??50;
+  if(c.weather_code>=95)return["Ribut petir","rain"];
+  if(p>=2.5)return["Hujan lebat","rain"];if(p>=0.5)return["Hujan","rain"];if(p>0)return["Renyai-renyai","rain"];
+  if(c.weather_code===45||c.weather_code===48)return["Berkabus","cloud"];
+  return cc<20?["Cerah","sun"]:cc<60?["Separa berawan","cloud"]:["Berawan","cloud"]}
 async function loadWeather(){
-  try{const r=await(await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${CONFIG.lat}&longitude=${CONFIG.lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&timezone=${TZ}`)).json(),c=r.current;
-    $("#wx .ic").innerHTML=WI(c.weather_code);$("#wx .tp").textContent=Math.round(c.temperature_2m)+"°C";$("#wx .ds").textContent=WT(c.weather_code);
-    $("#wx .xt").innerHTML=`${ic("drop")} Kelembapan: ${c.relative_humidity_2m}%<br>${ic("wind")} Angin: ${Math.round(c.wind_speed_10m)} km/j<br>${ic("pin")} ${CONFIG.place}`}catch(e){}
+  try{const r=await(await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${CONFIG.lat}&longitude=${CONFIG.lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code,precipitation,cloud_cover&timezone=${TZ}`,{cache:"no-store"})).json(),c=r.current,w=wxDesc(c);
+    $("#wx .ic").innerHTML=WI(w[1]);$("#wx .tp").textContent=Math.round(c.temperature_2m)+"°C";$("#wx .ds").textContent=w[0];
+    $("#wx .xt").innerHTML=`${ic("drop")} Kelembapan: ${c.relative_humidity_2m}%<br>${ic("wind")} Angin: ${Math.round(c.wind_speed_10m)} km/j<br>${ic("pin")} ${CONFIG.place}<br><span style="font-size:1rem;color:var(--mut)">Dikemas kini ${c.time.slice(11,16)}</span>`}
+  catch(e){const x=$("#wx .xt");if(x&&!x.innerHTML.includes("Gagal"))x.innerHTML+='<br><span style="font-size:1rem;color:#c0392b">⚠ Gagal kemas kini cuaca</span>'}
 }
 tickClock();setInterval(tickClock,1000);
 loadConfig();setInterval(loadConfig,5*60*1000);
-loadPrayer();setInterval(loadPrayer,30*60*1000);setInterval(loadWeather,15*60*1000);
+setInterval(loadPrayer,30*60*1000);setInterval(loadWeather,10*60*1000);
 setTimeout(()=>location.reload(),6*3600*1000);
 </script></body></html>
