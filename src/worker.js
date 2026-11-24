@@ -21,6 +21,10 @@ export default {
         theme: ["light", "dark", "auto"].includes(b.theme) ? b.theme : "light",
         images: (b.images || []).map(x => String(x).slice(0, 300)).slice(0, 20),
       };
+      const pl = String(b.place || "").trim().slice(0, 60), la = Number(b.lat), lo = Number(b.lon), zn = String(b.zone || "").trim().toUpperCase();
+      if (pl) clean.place = pl;
+      if (Number.isFinite(la) && Number.isFinite(lo) && Math.abs(la) <= 90 && Math.abs(lo) <= 180 && (la || lo)) { clean.lat = la; clean.lon = lo; }
+      if (/^[A-Z]{3}\d{2}$/.test(zn)) clean.zone = zn;
       await env.TV_KV.put("config", JSON.stringify(clean));
       return new Response('{"ok":true}', { headers: H });
     }
