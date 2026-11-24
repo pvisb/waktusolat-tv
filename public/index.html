@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="ms"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Waktu Solat PVISB</title>
+<title>Papan Maklumat</title>
 <style>
 /* 1rem = 10 px of the 1364x634 reference design; everything scales to any screen */
 html{font-size:min(calc(100vw/136.4),calc(100vh/63.4))}
@@ -110,6 +110,7 @@ const CONFIG = {
   slogan: ["Komited Merealisasikan", "Impian Anda"],
   images: ["img/1.jpg"],
   slideSeconds: 8,
+  azan: "azan.mp3",           // file in the public folder, or a full https:// link to an mp3
   theme: "light",            // "light", "dark" or "auto" (dark 7pm-7am)
   announcements: [],
   ticker: ["PERDA VENTURES INCORPORATED SDN BHD", "Facebook: Perda Ventures Incorporated", "TikTok / Instagram: Perdaventures", "Tel: 04-XXXXXXX"],
@@ -162,9 +163,11 @@ async function loadConfig(){
   applyConfig();
 }
 
-/* sound button (put an azan.mp3 file next to index.html) */
+/* sound button: ON plays a 4 second test; at each prayer time (not Syuruk) the full azan plays */
 function drawSnd(){$("#snd").innerHTML=ic(snd?"vol":"mute")+" Bunyi: "+(snd?"ON":"OFF")}
-$("#snd").onclick=()=>{snd=!snd;localStorage.setItem("snd",snd?"1":"0");drawSnd();if(snd)new Audio("azan.mp3").play().catch(()=>{})};drawSnd();
+let au=null;
+function playAzan(preview){try{if(au)au.pause();const a=au=new Audio(CONFIG.azan);a.play().catch(()=>{});if(preview)setTimeout(()=>{if(au===a)a.pause()},4000)}catch(e){}}
+$("#snd").onclick=()=>{snd=!snd;localStorage.setItem("snd",snd?"1":"0");drawSnd();if(snd)playAzan(true);else if(au)au.pause()};drawSnd();
 let played="";
 
 function tickClock(){
@@ -198,7 +201,7 @@ function countdown(){
   const s=Math.max(0,Math.floor((target-Date.now())/1000)),f=v=>String(v).padStart(2,"0"),pr=Math.min(1,Math.max(0,(Date.now()-prev)/(target-prev)));
   $("#cd .n").textContent=NAMES[ni];$("#cd .t").textContent=`${f(s/3600|0)}:${f(s%3600/60|0)}:${f(s%60)}`;
   const p=to12(target);$("#cd .a").textContent=`( ${p[0]} ${p[1]} )`;$("#arc").style.strokeDashoffset=226*(1-pr);
-  if(snd&&s===0&&ni!==1&&played!==d+ni){played=d+ni;new Audio("azan.mp3").play().catch(()=>{})}
+  if(snd&&s===0&&ni!==1&&played!==d+ni){played=d+ni;playAzan(false)}
 }
 const WI=(k)=>{const cl='<path d="M14 52a13 13 0 010-26 16 16 0 0130-3 12 12 0 012 29z" fill="#a8b0c2" stroke="none"/>',
   dr=[22,34,46].map(x=>`<path d="M${x} 56l-3 8" stroke="#4a63e8" stroke-width="5"/>`).join("");
