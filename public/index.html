@@ -204,10 +204,13 @@ const WI=(k)=>{const cl='<path d="M14 52a13 13 0 010-26 16 16 0 0130-3 12 12 0 0
   dr=[22,34,46].map(x=>`<path d="M${x} 56l-3 8" stroke="#4a63e8" stroke-width="5"/>`).join("");
   return k==="sun"?'<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="14" fill="#fbbf24" stroke="none"/></svg>':
   `<svg viewBox="0 0 64 72" style="stroke-linecap:round">${cl}${k==="rain"?dr:""}</svg>`};
-/* description follows measured rain + cloud cover (not only the forecast code) */
-function wxDesc(c){const p=c.precipitation||0,cc=c.cloud_cover??50;
+/* Rain is converted to mm/h using the API interval (900 s = 15 min, so x4).
+   Scale: <2.5 light, 2.5-7.6 moderate, >7.6 heavy. RAIN_MIN hides trace amounts.
+   Values are a model estimate, not a rain gauge. */
+const RAIN_MIN=0.5; // mm/h; lower it (e.g. 0.1) to show even light drizzle
+function wxDesc(c){const p=(c.precipitation||0)*3600/(c.interval||900),cc=c.cloud_cover??50;
   if(c.weather_code>=95)return["Ribut petir","rain"];
-  if(p>=2.5)return["Hujan lebat","rain"];if(p>=0.5)return["Hujan","rain"];if(p>0)return["Renyai-renyai","rain"];
+  if(p>7.6)return["Hujan lebat","rain"];if(p>=2.5)return["Hujan sederhana","rain"];if(p>=RAIN_MIN)return["Renyai-renyai","rain"];
   if(c.weather_code===45||c.weather_code===48)return["Berkabus","cloud"];
   return cc<20?["Cerah","sun"]:cc<60?["Separa berawan","cloud"]:["Berawan","cloud"]}
 async function loadWeather(){
